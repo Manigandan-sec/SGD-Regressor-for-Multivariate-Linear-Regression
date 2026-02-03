@@ -31,7 +31,6 @@ RegisterNumber:  25004934
 ```
 import numpy as np
 from sklearn.linear_model import SGDRegressor
-from sklearn.multioutput import MultiOutputRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
@@ -44,53 +43,46 @@ X = np.array([
     [1800, 4],
     [2000, 5]
 ])
-y = np.array([
-    [30, 2],
-    [45, 3],
-    [55, 4],
-    [75, 5],
-    [90, 6],
-    [110, 7]
-])
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+y_price = np.array([30, 40, 45, 60, 75, 90])      
+y_occupants = np.array([2, 3, 3, 4, 5, 6])
+
+X_train, X_test, y_price_train, y_price_test, y_occ_train, y_occ_test = train_test_split(
+    X, y_price, y_occupants, test_size=0.2, random_state=42)
 
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
-sgd = SGDRegressor(
-    max_iter=1000,
-    tol=1e-3,
-    learning_rate='optimal',
-    random_state=42
-)
+price_model = SGDRegressor(max_iter=1000, tol=1e-3, random_state=42)
+occupant_model = SGDRegressor(max_iter=1000, tol=1e-3, random_state=42)
 
-model = MultiOutputRegressor(sgd)
-model.fit(X_train, y_train)
+price_model.fit(X_train_scaled, y_price_train)
+occupant_model.fit(X_train_scaled, y_occ_train)
 
-y_pred = model.predict(X_test)
+price_pred = price_model.predict(X_test_scaled)
+occ_pred = occupant_model.predict(X_test_scaled)
 
-mse = mean_squared_error(y_test, y_pred)
-print("Mean Squared Error:", mse)
+
+print("House Price MSE:", mean_squared_error(y_price_test, price_pred))
+print("Occupants MSE:", mean_squared_error(y_occ_test, occ_pred))
 
 new_house = np.array([[1600, 4]])
 new_house_scaled = scaler.transform(new_house)
 
-prediction = model.predict(new_house_scaled)
+predicted_price = price_model.predict(new_house_scaled)
+predicted_occupants = occupant_model.predict(new_house_scaled)
 
-print("\nPredicted House Price (in lakhs):", round(prediction[0][0], 2))
-print("Predicted Number of Occupants:", round(prediction[0][1]))
+print("\nPrediction for New House:")
+print("Predicted House Price (in lakhs):", predicted_price[0])
+print("Predicted Number of Occupants:", round(predicted_occupants[0]))
 
 
 ```
 
 ## Output:
-<img width="634" height="90" alt="Screenshot 2026-02-03 130737" src="https://github.com/user-attachments/assets/0dda676c-a01f-46df-8826-ff12b49258f3" />
-<img width="486" height="68" alt="Screenshot 2026-02-03 130751" src="https://github.com/user-attachments/assets/b0e24b2d-1939-4529-b6ed-68cc99c0cd41" />
-
+<img width="406" height="62" alt="Screenshot 2026-02-03 140951" src="https://github.com/user-attachments/assets/ec7842e4-4841-445e-a781-f5c064cd85bd" />
+<img width="534" height="101" alt="Screenshot 2026-02-03 141002" src="https://github.com/user-attachments/assets/acb5280e-544a-4abe-bb36-6ff7e67a91d2" />
 
 
 ## Result:
